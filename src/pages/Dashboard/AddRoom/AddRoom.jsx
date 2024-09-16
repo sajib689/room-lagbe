@@ -1,19 +1,35 @@
-import React from 'react';
+import React, { useContext } from 'react';
+import uploadImageToImgBB from '../../../utils/helper';
+import toast from 'react-hot-toast';
+import { AuthContext } from '../../../provider/AuthProvider';
+import axios from 'axios';
 
 const AddRoom = () => {
-    const handleAddRoom = (e) => {
+    const { user } = useContext(AuthContext);
+    const handleAddRoom = async (e) => {
         e.preventDefault();
         const form = e.target;
         const id = form.id.value;
         const title = form.title.value;
         const propertyType = form.propertyType.value;
+        const propertyFor = form.propertyFor.value;
         const status = form.status.value;
         const description = form.description.value;
         const availableFrom = form.availableFrom.value;
         const price = form.price.value;
         const advanceFee = form.advanceFee.value;
         const currency = form.currency.value;
-        const image = form.image.value;
+        const image1 = form.image1.files[0];
+        const image2 = form.image2.files[0];
+        if (!image1 || !image2) {
+            return toast.error("image1 and image2 must be required");
+        }
+
+        const newImage1 = await uploadImageToImgBB(image1);
+        const newImage2 = await uploadImageToImgBB(image2);
+        if (!newImage1 || !newImage2) {
+            return toast.error("something failed! try again");
+        }
         const location = {
             block: form.block.value,
             road: form.road.value,
@@ -56,14 +72,16 @@ const AddRoom = () => {
             securityGarage: form.securityGarage.checked,
         }
         const amenities =
-        {
-            cctv: form.cctv.value,
-            guards: form.guards.value,
-        }
-        console.log({
+            [
+                form.cctv.value,
+                form.guards.value,
+            ]
+        const image = [newImage1, newImage2]
+        const newData = {
             id,
             title,
             propertyType,
+            propertyFor,
             status,
             description,
             availableFrom,
@@ -73,8 +91,28 @@ const AddRoom = () => {
             location,
             features,
             security,
-            amenities
-        });
+            amenities,
+            image,
+            auth: {
+                id: user._id,
+                name: user.displayName,
+                email: user.email,
+            }
+        }
+
+        try {
+            const { data: res } = await axios.post('http://localhost:5000/api/rooms/add-room', newData);
+            console.log(res);
+            if (res.success) {
+                toast.success("added room successfully");
+                form.reset();
+            }
+
+        } catch (error) {
+            toast.error("something went wrong, try again");
+            console.log("something went wrong,", error);
+
+        }
     };
     return (
         <>
@@ -83,7 +121,7 @@ const AddRoom = () => {
                 <div className='px-4'>
                     <div className="dark:bg-gray-100 dark:text-gray-900 mb-3">
                         <form
-                        onSubmit={handleAddRoom}
+                            onSubmit={handleAddRoom}
                             className="container flex flex-col mx-auto space-y-12"
                         >
                             {/* Property Details Section */}
@@ -114,7 +152,7 @@ const AddRoom = () => {
                                             id="title"
                                             name="title"
                                             type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full">
@@ -136,7 +174,7 @@ const AddRoom = () => {
                                             id="propertyType"
                                             name="propertyType"
                                             type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -158,7 +196,7 @@ const AddRoom = () => {
                                             id="status"
                                             name="status"
                                             type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -169,7 +207,7 @@ const AddRoom = () => {
                                             id="availableFrom"
                                             name="availableFrom"
                                             type="date"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -180,7 +218,7 @@ const AddRoom = () => {
                                             id="price"
                                             name="price"
                                             type="number"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -191,7 +229,7 @@ const AddRoom = () => {
                                             id="advanceFee"
                                             name="advanceFee"
                                             type="number"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-6">
@@ -202,7 +240,7 @@ const AddRoom = () => {
                                             id="currency"
                                             name="currency"
                                             type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                 </div>
@@ -225,7 +263,7 @@ const AddRoom = () => {
                                             id="block"
                                             name="block"
                                             type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -247,7 +285,7 @@ const AddRoom = () => {
                                             id="area"
                                             name="area"
                                             type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -258,7 +296,7 @@ const AddRoom = () => {
                                             id="city"
                                             name="city"
                                             type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -269,7 +307,7 @@ const AddRoom = () => {
                                             id="district"
                                             name="district"
                                             type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -280,7 +318,7 @@ const AddRoom = () => {
                                             id="division"
                                             name="division"
                                             type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -291,7 +329,7 @@ const AddRoom = () => {
                                             id="postalCode"
                                             name="postalCode"
                                             type="number"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -303,7 +341,7 @@ const AddRoom = () => {
                                             name="lat"
                                             type="number"
                                             step="0.000001"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -315,7 +353,7 @@ const AddRoom = () => {
                                             name="long"
                                             type="number"
                                             step="0.000001"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -325,8 +363,8 @@ const AddRoom = () => {
                                         <input
                                             id="number"
                                             name="number"
-                                            type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            type="number"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                 </div>
@@ -348,7 +386,7 @@ const AddRoom = () => {
                                         <input
                                             id="bedRoom"
                                             name="bedRoom"
-                                            type="text"
+                                            type="number"
                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
@@ -359,8 +397,8 @@ const AddRoom = () => {
                                         <input
                                             id="bathRoom"
                                             name="bathRoom"
-                                            type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            type="number"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -370,8 +408,8 @@ const AddRoom = () => {
                                         <input
                                             id="kitchen"
                                             name="kitchen"
-                                            type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            type="number"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -381,8 +419,8 @@ const AddRoom = () => {
                                         <input
                                             id="livingRoom"
                                             name="livingRoom"
-                                            type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            type="number"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -395,8 +433,8 @@ const AddRoom = () => {
                                         <input
                                             id="attachedBathRoom"
                                             name="attachedBathRoom"
-                                            type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            type="number"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-3">
@@ -407,7 +445,7 @@ const AddRoom = () => {
                                             id="squareFeet"
                                             name="squareFeet"
                                             type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                     <div className="col-span-full sm:col-span-6">
@@ -418,7 +456,7 @@ const AddRoom = () => {
                                             id="parking"
                                             name="parking"
                                             type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
 
@@ -671,7 +709,7 @@ const AddRoom = () => {
                                             id="guards"
                                             name="guards"
                                             type="text"
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                 </div>
@@ -688,11 +726,11 @@ const AddRoom = () => {
                                 <div className="grid grid-cols-6 gap-4 col-span-full lg:col-span-3">
                                     <div className="col-span-full">
                                         <label htmlFor="images" className="text-sm font-semibold">
-                                            Images
+                                            Image 1
                                         </label>
                                         <input
                                             id="image"
-                                            name="image"
+                                            name="image1"
                                             type="file"
                                             multiple
                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
@@ -700,14 +738,14 @@ const AddRoom = () => {
                                     </div>
                                     <div className="col-span-full">
                                         <label htmlFor="videos" className="text-sm font-semibold">
-                                            Videos
+                                            Image 2
                                         </label>
                                         <input
                                             id="videos"
-                                            name="media[videos]"
+                                            name="image2"
                                             type="file"
                                             multiple
-                                             className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
+                                            className="w-full rounded-md p-2 border-2 border-[#01204EA3]"
                                         />
                                     </div>
                                 </div>

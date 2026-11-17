@@ -5,8 +5,8 @@
   "type": "module",
   "author": "Smais Shawon",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node init && vite",
+    "build": "node init && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
